@@ -1,0 +1,27 @@
+<!-- public/cliente.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Menú - TEKNETXEA</title>
+  <link rel="stylesheet" href="css/cliente.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <h1>Bienvenido a <span class="titulo">TEKNETXEA</span></h1>
+  <p>A continuación puede seleccionar cualquiera de las siguientes categorías para comenzar con el pedido.</p>
+  <div id="categorias">
+    <button onclick="mostrarMenu('entrantes')">Entrantes</button>
+    <button onclick="mostrarMenu('principales')">Principales</button>
+    <button onclick="mostrarMenu('segundos')">Segundos</button>
+    <button onclick="mostrarMenu('postres')">Postres</button>
+    <button onclick="mostrarMenu('bebidas')">Bebidas</button>
+  </div>
+  <div id="menu"></div>
+  <div id="contenido"></div>
+  <button id="volver" onclick="volverAInicio()" style="display:none;">Volver</button>
+  <button id="finalizar" onclick="finalizarPedido()">Finalizar Pedido</button>
+
+  <script src="js/cliente.js"></script>
+</body>
+</html>

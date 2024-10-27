@@ -1,0 +1,22 @@
+<!-- public/barra.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Barra - TEKNETXEA</title>
+  <link rel="stylesheet" href="css/barra.css">
+</head>
+<body>
+  <nav>
+    <button onclick="mostrarComandas()">Comandas</button>
+    <button onclick="mostrarMesas()">Mesas</button>
+    <button onclick="mostrarHistorial()">Historial</button>
+  </nav>
+  <div id="contenido"></div>
+
+  <!-- Importar Socket.IO -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/barra.js"></script>
+</body>
+</html>
+

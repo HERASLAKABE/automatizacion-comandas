@@ -1,0 +1,53 @@
+/* public/css/barra.css */
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  
+  nav {
+    margin-bottom: 20px;
+  }
+  
+  nav button {
+    margin-right: 10px;
+    padding: 10px 20px;
+  }
+  
+  .grid-comandas {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 10px;
+  }
+  
+  .comanda {
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    padding: 10px;
+  }
+  
+  .comanda.completada {
+    background-color: #d4edda; /* Verde claro */
+  }
+  
+  .plato {
+    cursor: pointer;
+  }
+  
+  .plato.completado {
+    text-decoration: line-through;
+    color: rgb(15, 154, 48);
+  }
+  
+  .comentario {
+    color: red;
+  }
+
+  .en-preparacion {
+    font-weight: bold;
+    color: rgb(15, 154, 48);
+  }
+
+  .plato.bebida {
+    color: rgb(12, 44, 226);
+  }
+  

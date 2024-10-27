@@ -1,0 +1,36 @@
+/* public/css/cocina.css */
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  
+  .grid-comandas {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 10px;
+  }
+  
+  .comanda {
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    padding: 10px;
+  }
+  
+  .plato {
+    cursor: pointer;
+  }
+  
+  .plato.completado {
+    text-decoration: line-through;
+    color: rgb(15, 154, 48);
+  }
+  
+  .comentario {
+    color: red;
+  }
+
+  .comanda.en-preparacion {
+    background-color: #e6d6f0; /* Color morado claro */
+  }
+
+  

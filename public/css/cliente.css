@@ -1,0 +1,58 @@
+/* public/css/cliente.css */
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  
+  .titulo {
+    color: red;
+  }
+  
+  #categorias button {
+    margin: 5px;
+    padding: 10px;
+  }
+  
+  #menu {
+    margin-top: 20px;
+  }
+  
+  .plato {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .plato h3 {
+    margin: 0;
+  }
+  
+  .plato p {
+    margin: 5px 0;
+  }
+  
+  #volver, #finalizar {
+    margin: 10px 5px;
+    padding: 10px 20px;
+  }
+  
+  .comentario {
+    color: red;
+  }
+  
+  /* Estilo para el mensaje de mesa deshabilitada */
+  .mensaje-desactivado {
+    text-align: center;
+    margin-top: 50px;
+  }
+  
+  .mensaje-desactivado h2 {
+    font-size: 24px;
+    color: red;
+    margin-bottom: 20px;
+  }
+  
+  .mensaje-desactivado p {
+    font-size: 18px;
+  }
+  
