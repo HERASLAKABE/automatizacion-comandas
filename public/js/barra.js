@@ -1,11 +1,12 @@
 // public/js/barra.js
 
-// Lista de IDs de bebidas
+const notificationSound = new Audio('/sounds/notification.mp3');
 const idsBebidas = [9, 10]; // Ajusta estos IDs según los que hayas asignado a las bebidas
 
 let socket = io();
 let comandas = [];
 
+// Función para mostrar las comandas
 function mostrarComandas() {
   document.getElementById('contenido').innerHTML = '<h2>Comandas</h2><div id="grid-comandas" class="grid-comandas"></div>';
   actualizarComandas();
@@ -38,7 +39,7 @@ function mostrarHistorial() {
         let total = comanda.platos.reduce((acc, plato) => acc + (plato.precio * plato.cantidad), 0);
         contenido += `
           <div class="comanda">
-            <h3>Mesa ${comanda.mesa}</h3>
+            <h3>Mesa ${comanda.mesa} - Atendido por: ${comanda.camarero}</h3>
             <p>Fecha: ${comanda.fecha}</p>
             <ul>
               ${comanda.platos.map(plato => `
@@ -71,6 +72,7 @@ function guardarMesas() {
     });
 }
 
+// Escuchar eventos de socket.io
 socket.on('connect', () => {
   socket.on('comandasActuales', (data) => {
     comandas = data;
@@ -80,6 +82,7 @@ socket.on('connect', () => {
   socket.on('nuevaComanda', (comanda) => {
     comandas.push(comanda);
     actualizarComandas();
+    notificationSound.play();
   });
 
   socket.on('actualizarComanda', (comandaActualizada) => {
@@ -97,33 +100,46 @@ socket.on('connect', () => {
 });
 
 function actualizarComandas() {
-    const grid = document.getElementById('grid-comandas');
-    if (!grid) return;
-    grid.innerHTML = '';
-    comandas.forEach(comanda => {
-      const div = document.createElement('div');
-      div.className = 'comanda' + (comanda.completada ? ' completada' : '');
-      let total = comanda.platos.reduce((acc, plato) => acc + (plato.precio * plato.cantidad), 0);
-      div.innerHTML = `
-        <h3>Mesa ${comanda.mesa}</h3>
-        <p>Fecha: ${comanda.fecha}</p>
-        ${comanda.enPreparacion ? '<p class="en-preparacion">(En preparación)</p>' : ''}
-        <ul>
-          ${comanda.platos.map(plato => `
-            <li class="plato ${plato.completado ? 'completado' : ''} ${idsBebidas.includes(plato.id) ? 'bebida' : ''}" onclick="marcarPlato(${comanda.id}, ${plato.id})">
-              ${plato.nombre} x${plato.cantidad}
-              ${plato.comentario ? `<span class="comentario">${plato.comentario}</span>` : ''}
-            </li>
-          `).join('')}
-        </ul>
-        <p>Total: €${total.toFixed(2)}</p>
-        <button onclick="marcarComandaCompletada(${comanda.id})">Marcar Comanda Completada</button>
-        <button onclick="borrarComanda(${comanda.id})">Borrar Comanda</button>
-      `;
-      grid.appendChild(div);
-    });
+  const grid = document.getElementById('grid-comandas');
+  if (!grid) return;
+  grid.innerHTML = '';
+  comandas.forEach(comanda => {
+    const div = document.createElement('div');
+    div.className = 'comanda' + (comanda.completada ? ' completada' : '');
+    let total = comanda.platos.reduce((acc, plato) => acc + (plato.precio * plato.cantidad), 0);
+
+    div.innerHTML = `
+      <h3>Mesa ${comanda.mesa}</h3>
+      <label for="camarero-${comanda.id}">Nombre del Camarero:</label>
+      <input type="text" id="camarero-${comanda.id}" placeholder="Ingresa nombre" value="${comanda.camarero || ''}" ${comanda.camarero ? 'disabled' : ''}>
+      <button onclick="guardarNombreCamarero(${comanda.id})" ${comanda.camarero ? 'disabled' : ''}>Guardar Nombre</button>
+      <p>Fecha: ${comanda.fecha}</p>
+      ${comanda.enPreparacion ? '<p class="en-preparacion">(En preparación)</p>' : ''}
+      <ul>
+        ${comanda.platos.map(plato => `
+          <li class="plato ${plato.completado ? 'completado' : ''} ${idsBebidas.includes(plato.id) ? 'bebida' : ''}" onclick="marcarPlato(${comanda.id}, ${plato.id})">
+            ${plato.nombre} x${plato.cantidad}
+            ${plato.comentario ? `<span class="comentario">${plato.comentario}</span>` : ''}
+          </li>
+        `).join('')}
+      </ul>
+      <p>Total: €${total.toFixed(2)}</p>
+      <button onclick="marcarComandaCompletada(${comanda.id})">Marcar Comanda Completada</button>
+      <button onclick="borrarComanda(${comanda.id})">Borrar Comanda</button>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function guardarNombreCamarero(idComanda) {
+  const camarero = document.getElementById(`camarero-${idComanda}`).value.trim();
+  const comanda = comandas.find(c => c.id === idComanda);
+  if (comanda) {
+    comanda.camarero = camarero || "Sin asignar";
+    socket.emit('actualizarComanda', comanda);
+    actualizarComandas(); // Actualizar visualmente la interfaz
   }
-  
+}
 
 function marcarPlato(idComanda, idPlato) {
   socket.emit('platoCompletado', { idComanda, idPlato });
@@ -139,5 +155,4 @@ function borrarComanda(idComanda) {
   }
 }
 
-// Mostrar comandas al cargar
 mostrarComandas();

@@ -9,7 +9,6 @@ const fs = require('fs');
 
 // Configuración
 const PORT = process.env.PORT || 3000;
-// Middleware
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
@@ -26,7 +25,6 @@ function cargarDatos() {
   if (fs.existsSync('./data/mesas.json')) {
     mesasHabilitadas = JSON.parse(fs.readFileSync('./data/mesas.json'));
   } else {
-    // Si no existe el archivo de mesas, inicializar todas las mesas como habilitadas
     for (let i = 1; i <= 20; i++) {
       mesasHabilitadas[i] = true;
     }
@@ -36,39 +34,32 @@ function cargarDatos() {
 cargarDatos();
 
 // Rutas del servidor
-// Ruta para recibir pedidos del cliente
 app.post('/pedido', (req, res) => {
   const pedido = req.body;
-
-  // Verificar si la mesa está habilitada
   if (!mesasHabilitadas[pedido.mesa]) {
     return res.status(403).send({ mensaje: 'Mesa deshabilitada' });
   }
 
+  pedido.fecha = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   pedido.id = Date.now();
   pedido.estado = 'Pendiente';
-  comandas.push(pedido);
 
-  // Emitir el pedido a las interfaces de barra y cocina
+  comandas.push(pedido);
   io.emit('nuevaComanda', pedido);
 
   res.status(200).send({ mensaje: 'Pedido recibido' });
 });
 
-// Ruta para obtener el estado de las mesas
 app.get('/mesas', (req, res) => {
   res.json(mesasHabilitadas);
 });
 
-// Ruta para actualizar el estado de las mesas
 app.post('/mesas', (req, res) => {
   mesasHabilitadas = req.body;
-  // Guardar en archivo
   fs.writeFileSync('./data/mesas.json', JSON.stringify(mesasHabilitadas));
   res.status(200).send({ mensaje: 'Estado de mesas actualizado' });
 });
 
-// Ruta para obtener el historial
 app.get('/historial', (req, res) => {
   res.json(historial);
 });
@@ -76,52 +67,55 @@ app.get('/historial', (req, res) => {
 // Manejo de conexiones de Socket.IO
 io.on('connection', (socket) => {
   console.log('Usuario conectado');
-
-  // Enviar las comandas actuales al conectar
   socket.emit('comandasActuales', comandas);
 
-  // Escuchar cuando se marca un plato como completado
+  // Escuchar cuando se actualiza una comanda, incluido el nombre del camarero
+  socket.on('actualizarComanda', (comandaActualizada) => {
+    const index = comandas.findIndex(c => c.id === comandaActualizada.id);
+    if (index !== -1) {
+      comandas[index] = comandaActualizada;
+      io.emit('actualizarComanda', comandas[index]);
+    }
+  });
+
   socket.on('platoCompletado', ({ idComanda, idPlato }) => {
     const comanda = comandas.find(c => c.id === idComanda);
     if (comanda) {
       const plato = comanda.platos.find(p => p.id === idPlato);
       if (plato) {
-        plato.completado = !plato.completado; // Alternar el estado de completado
+        plato.completado = !plato.completado;
         io.emit('actualizarComanda', comanda);
       }
     }
   });
 
-  // Escuchar cuando una comanda se marca como en preparación
   socket.on('comandaEnPreparacion', (idComanda) => {
     const comanda = comandas.find(c => c.id === idComanda);
     if (comanda) {
-      comanda.enPreparacion = !comanda.enPreparacion; // Alternar el estado
+      comanda.enPreparacion = !comanda.enPreparacion;
       io.emit('actualizarComanda', comanda);
     }
   });
 
-  // Escuchar cuando se marca una comanda como completada
   socket.on('comandaCompletada', (idComanda) => {
     const comanda = comandas.find(c => c.id === idComanda);
     if (comanda) {
       comanda.completada = true;
-      // Emitir actualización a las interfaces
       io.emit('actualizarComanda', comanda);
-      // Eliminar la comanda de la interfaz de cocina
       io.emit('eliminarComandaCocina', idComanda);
+
+      const comandaParaHistorial = { ...comanda, camarero: comanda.camarero || "Sin asignar" };
+      historial.push(comandaParaHistorial);
+      fs.writeFileSync('./data/historial.json', JSON.stringify(historial));
     }
   });
 
-  // Escuchar cuando se borra una comanda
   socket.on('borrarComanda', (idComanda) => {
     const index = comandas.findIndex(c => c.id === idComanda);
     if (index !== -1) {
       const comandaBorrada = comandas.splice(index, 1)[0];
-      // Agregar al historial
       historial.push(comandaBorrada);
       fs.writeFileSync('./data/historial.json', JSON.stringify(historial));
-      // Emitir evento para eliminar la comanda de las interfaces
       io.emit('eliminarComanda', idComanda);
     }
   });
@@ -131,3 +125,6 @@ io.on('connection', (socket) => {
 server.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
+
+
+

@@ -1,11 +1,14 @@
 // public/js/cocina.js
 
-// Lista de IDs de bebidas
+// Inicializar el sonido de notificación
+const notificationSound = new Audio('/sounds/notification.mp3');
+
 const idsBebidas = [9, 10]; // Ajusta estos IDs según los que hayas asignado a las bebidas
 
 let socket = io();
 let comandas = [];
 
+// Escuchar eventos de socket.io
 socket.on('connect', () => {
   socket.on('comandasActuales', (data) => {
     comandas = data;
@@ -15,6 +18,7 @@ socket.on('connect', () => {
   socket.on('nuevaComanda', (comanda) => {
     comandas.push(comanda);
     actualizarComandas();
+    notificationSound.play(); // Reproduce el sonido cuando llega una nueva comanda
   });
 
   socket.on('actualizarComanda', (comandaActualizada) => {
@@ -32,40 +36,36 @@ socket.on('connect', () => {
 });
 
 function actualizarComandas() {
-    const grid = document.getElementById('grid-comandas');
-    grid.innerHTML = '';
-    comandas.forEach(comanda => {
-      const div = document.createElement('div');
-      div.className = 'comanda' + (comanda.enPreparacion ? ' en-preparacion' : '');
-      div.addEventListener('click', () => marcarEnPreparacion(comanda.id));
-      
-      // Filtrar los platos para excluir las bebidas
-      const platosSinBebidas = comanda.platos.filter(plato => !idsBebidas.includes(plato.id));
-      
-      // Si no hay platos después de filtrar, no mostrar la comanda
-      if (platosSinBebidas.length === 0) {
-        return; // Saltar a la siguiente comanda
-      }
-  
-      div.innerHTML = `
-        <h3>Mesa ${comanda.mesa}</h3>
-        <p>Fecha: ${comanda.fecha}</p>
-        <ul>
-          ${platosSinBebidas.map(plato => `
-            <li class="plato ${plato.completado ? 'completado' : ''}" onclick="marcarPlato(event, ${comanda.id}, ${plato.id})">
-              ${plato.nombre} x${plato.cantidad}
-              ${plato.comentario ? `<span class="comentario">${plato.comentario}</span>` : ''}
-            </li>
-          `).join('')}
-        </ul>
-      `;
-      grid.appendChild(div);
-    });
-  }
-  
+  const grid = document.getElementById('grid-comandas');
+  grid.innerHTML = '';
+  comandas.forEach(comanda => {
+    const div = document.createElement('div');
+    div.className = 'comanda' + (comanda.enPreparacion ? ' en-preparacion' : '');
+    div.addEventListener('click', () => marcarEnPreparacion(comanda.id));
+
+    const platosSinBebidas = comanda.platos.filter(plato => !idsBebidas.includes(plato.id));
+    
+    if (platosSinBebidas.length === 0) {
+      return;
+    }
+
+    div.innerHTML = `
+      <h3>Mesa ${comanda.mesa} - Atendido por: ${comanda.camarero || "Sin asignar"}</h3>
+      <p>Fecha: ${comanda.fecha}</p>
+      <ul>
+        ${platosSinBebidas.map(plato => `
+          <li class="plato ${plato.completado ? 'completado' : ''}" onclick="marcarPlato(event, ${comanda.id}, ${plato.id})">
+            ${plato.nombre} x${plato.cantidad}
+            ${plato.comentario ? `<span class="comentario">${plato.comentario}</span>` : ''}
+          </li>
+        `).join('')}
+      </ul>
+    `;
+    grid.appendChild(div);
+  });
+}
 
 function marcarPlato(event, idComanda, idPlato) {
-  // Prevenir que el evento se propague al contenedor de la comanda
   event.stopPropagation();
   socket.emit('platoCompletado', { idComanda, idPlato });
 }
@@ -73,3 +73,5 @@ function marcarPlato(event, idComanda, idPlato) {
 function marcarEnPreparacion(idComanda) {
   socket.emit('comandaEnPreparacion', idComanda);
 }
+
+
